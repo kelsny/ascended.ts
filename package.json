@@ -1,0 +1,25 @@
+{
+    "name": "ascended",
+    "description": "",
+    "version": "1.0.0",
+    "types": "dist/index.d.ts",
+    "main": "dist/index.d.ts",
+    "directories": {
+        "doc": "docs"
+    },
+    "devDependencies": {
+        "typescript": "^4.9.4"
+    },
+    "scripts": {},
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kelsny/ascended.ts.git"
+    },
+    "keywords": [],
+    "author": "kelly <cursors.owo.uwu@gmail.com>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/kelsny/ascended.ts/issues"
+    },
+    "homepage": "https://github.com/kelsny/ascended.ts#readme"
+}

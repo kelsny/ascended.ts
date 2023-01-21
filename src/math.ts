@@ -1,4 +1,4 @@
-import type { Assume, FromEntries, Join, Not, PadStart, Split, Tuple, WithStringKeys, Zip } from "./utility";
+import type { Assume, FromEntries, Join, Not, PadEnd, PadStart, Reverse, Split, Tuple, WithStringKeys, Zip } from "./utility";
 
 export type LimitedDecrement<N extends number> = N extends -1 ? -1 : Tuple<N> extends [any, ...infer X] ? X["length"] : -1;
 export type LimitedIncrement<N extends number> = Tuple<N> extends infer X extends unknown[] ? [any, ...X]["length"] : never;
@@ -58,6 +58,10 @@ export type LTE<A extends number, B extends number> = Not<GT<A, B>>;
 
 export type EQ<A, B> = [A] extends [B] ? [B] extends [A] ? true : false : false;
 
+export type MAX<A extends number, B extends number> = { true: A; false: B }[`${GT<A, B>}`];
+
+export type MIN<A extends number, B extends number> = { true: B; false: A }[`${GT<A, B>}`];
+
 type AsNumber<N> = N extends "-0" ? 0 : N extends `${infer X extends number}` ? X : N extends number ? N : never;
 
 type ModTenHelper<A extends unknown[]> = A extends [...Tuple<10>, ...infer Rest] ? ModTenHelper<Rest> : A["length"];
@@ -66,7 +70,23 @@ type ModTen<N extends number> = ModTenHelper<Tuple<N>>;
 type DivTenHelper<A extends unknown[], R extends number = 0> = A extends [...Tuple<10>, ...infer Rest] ? DivTenHelper<Rest, LimitedIncrement<R>> : R;
 type DivTen<N extends number> = DivTenHelper<Tuple<N>>;
 
+type InsertFromEnd<S extends string, Index extends number, Char extends string, Right extends string = ""> = Split<Right>["length"] extends Index ? `${S}${Char}${Right}` : Join<Reverse<Split<S>>> extends `${infer C}${infer R}` ? InsertFromEnd<Join<Reverse<Split<R>>>, Index, Char, `${C}${Right}`> : never
+
 type StringAdd<
+    A extends string,
+    B extends string,
+    ASplit extends string[] = [...Split<A, ".">, "0"],
+    BSplit extends string[] = [...Split<B, ".">, "0"],
+    MaxLength extends number = MAX<Split<ASplit[1]>["length"], Split<BSplit[1]>["length"]>,
+    AInt extends string = ASplit[0],
+    AFrac extends string = PadEnd<ASplit[1], MaxLength, "0">,
+    BInt extends string = BSplit[0],
+    BFrac extends string = PadEnd<BSplit[1], MaxLength, "0">,
+    NewA extends string = `${AInt}${AFrac}`,
+    NewB extends string = `${BInt}${BFrac}`,
+> = Assume<InsertFromEnd<IntStringAdd<NewA, NewB>, MaxLength, ".">, string>;
+
+type IntStringAdd<
     A extends string,
     B extends string,
     Carry extends number = 0,
@@ -76,7 +96,7 @@ type StringAdd<
     X extends number = IsNegative<I> extends true ? 0 : AsNumber<Split<A>[I]>,
     Y extends number = IsNegative<J> extends true ? 0 : AsNumber<Split<B>[J]>,
 > = true extends (IsPositive<I> | IsPositive<J> | EQ<Carry, 1>)
-    ? StringAdd<A, B, DivTen<[...Tuple<X>, ...Tuple<Y>, ...Tuple<Carry>]["length"] & number>, LimitedDecrement<I>, LimitedDecrement<J>, `${ModTen<[...Tuple<X>, ...Tuple<Y>, ...Tuple<Carry>]["length"] & number>}${R}`>
+    ? IntStringAdd<A, B, DivTen<[...Tuple<X>, ...Tuple<Y>, ...Tuple<Carry>]["length"] & number>, LimitedDecrement<I>, LimitedDecrement<J>, `${ModTen<[...Tuple<X>, ...Tuple<Y>, ...Tuple<Carry>]["length"] & number>}${R}`>
     : R;
 
 export type Add<A extends number, B extends number> =
@@ -105,11 +125,11 @@ type StringSubtract<
     RawB extends string,
     B extends string = PadStart<RawB, Split<A>["length"], "0">,
     C extends string = StringAdd<A, TensComplements<B>>,
-> = EQ<Split<A>["length"], Split<C>["length"]> extends true
+> = Assume<EQ<Split<A>["length"], Split<C>["length"]> extends true
     ? TensComplements<C>
     : C extends `${infer _}${infer C}`
         ? TrimZeroes<C>
-        : never;
+        : never, string>;
 
 export type Subtract<A extends number, B extends number> =
     Assume<`${A}` extends `-${infer A extends number}`
@@ -123,3 +143,4 @@ export type Subtract<A extends number, B extends number> =
             : GT<A, B> extends true
                 ? AsNumber<StringSubtract<`${A}`, `${B}`>>
                 : AsNumber<`-${StringSubtract<`${B}`, `${A}`>}`>, number>;
+
