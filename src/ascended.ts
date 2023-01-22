@@ -1,5 +1,6 @@
-import type { LimitedIncrement } from "./math";
-import type { IsUnknown, Tuple } from "./utility";
+import type { Add } from "ts-arithmetic";
+import type { Tuple } from "./array";
+import type { IsUnknown } from "./utility";
 
 export type A<T extends Ascended = AscendedDefaults> = T["arguments"][0] & T["constraints"][0];
 export type B<T extends Ascended = AscendedDefaults> = T["arguments"][1] & T["constraints"][1];
@@ -12,18 +13,18 @@ export type H<T extends Ascended = AscendedDefaults> = T["arguments"][7] & T["co
 export type I<T extends Ascended = AscendedDefaults> = T["arguments"][8] & T["constraints"][8];
 export type J<T extends Ascended = AscendedDefaults> = T["arguments"][9] & T["constraints"][9];
 
-export type At<N extends number, T extends Ascended<LimitedIncrement<N>>, Default = unknown> = IsUnknown<T["arguments"]> extends true ? Default : T["arguments"][N];
+export type At<N extends number, T extends Ascended<Add<N, 1>>, Default = unknown> = IsUnknown<T["arguments"]> extends true ? Default : T["arguments"][N];
 export type Checked<
     N extends number,
-    T extends Ascended<LimitedIncrement<N>>,
+    T extends Ascended<Add<N, 1>>,
     Default = N extends keyof T["constraints"] ? T["constraints"][N] : never
 > = N extends keyof T["constraints"] ? (T["arguments"][N] extends T["constraints"][N] ? T["arguments"][N] : Default) : never;
 export type Optional<
     N extends number,
-    T extends Ascended<LimitedIncrement<N>>,
+    T extends Ascended<Add<N, 1>>,
     Default = N extends keyof T["constraints"] ? Exclude<T["constraints"][N], undefined> : never
 > = N extends keyof T["constraints"] ? (T["arguments"][N] extends Exclude<T["constraints"][N], undefined> ? T["arguments"][N] : Default) : never;
-export type Lossy<N extends number, T extends Ascended<LimitedIncrement<N>>> = N extends keyof T["constraints"] ? T["arguments"][N] & T["constraints"][N] : never;
+export type Lossy<N extends number, T extends Ascended<Add<N, 1>>> = N extends keyof T["constraints"] ? T["arguments"][N] & T["constraints"][N] : never;
 
 export type Ascended<Constraints extends number | unknown[] = unknown[], Return extends unknown = unknown> = AscendedType<
     number extends Constraints
